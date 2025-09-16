@@ -23,6 +23,7 @@ const LikeButton = ({
   const [showReactions, setShowReactions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showMobileReactions, setShowMobileReactions] = useState(false);
+  const [isAwaitingServer, setIsAwaitingServer] = useState(false);
 
   const containerRef = useRef(null);
   const timeoutRef = useRef(null);
@@ -47,12 +48,16 @@ const LikeButton = ({
   }, [initialReactions]);
 
   useEffect(() => {
-    // Avoid clobbering optimistic UI while a reaction request is in-flight
-    const nextReaction = userReaction?.likeType || null;
-    if (!isLoading) {
-      setCurrentUserReaction(nextReaction);
+    const parentReaction = userReaction?.likeType || null;
+    if (isAwaitingServer) {
+      // Stay on optimistic value until parent reflects it
+      if (parentReaction === currentUserReaction) {
+        setIsAwaitingServer(false);
+      }
+      return;
     }
-  }, [userReaction, isLoading]);
+    setCurrentUserReaction(parentReaction);
+  }, [userReaction, isAwaitingServer, currentUserReaction]);
 
   useEffect(() => {
     const timeoutAtMount = timeoutRef.current;
@@ -93,6 +98,7 @@ const LikeButton = ({
         // prevent further interaction during the request
         setShowReactions(false);
         setShowMobileReactions(false);
+        setIsAwaitingServer(true);
         if (previousUserReaction === reactionType) {
           // remove user's reaction
           updatedReactions = updatedReactions.filter(
@@ -113,11 +119,13 @@ const LikeButton = ({
 
         setReactions(updatedReactions);
         setShowReactions(false);
+        setIsAwaitingServer(true);
       } catch (error) {
         console.error("Error handling reaction:", error);
         // Revert to previous state on failure
         setReactions(initialReactions || []);
         setCurrentUserReaction(userReaction?.likeType || null);
+        setIsAwaitingServer(false);
       } finally {
         setIsLoading(false);
       }

@@ -47,8 +47,12 @@ const LikeButton = ({
   }, [initialReactions]);
 
   useEffect(() => {
-    setCurrentUserReaction(userReaction?.likeType || null);
-  }, [userReaction]);
+    // Avoid clobbering optimistic UI while a reaction request is in-flight
+    const nextReaction = userReaction?.likeType || null;
+    if (!isLoading) {
+      setCurrentUserReaction(nextReaction);
+    }
+  }, [userReaction, isLoading]);
 
   useEffect(() => {
     const timeoutAtMount = timeoutRef.current;
@@ -111,6 +115,7 @@ const LikeButton = ({
         setShowReactions(false);
       } catch (error) {
         console.error("Error handling reaction:", error);
+        // Revert to previous state on failure
         setReactions(initialReactions || []);
         setCurrentUserReaction(userReaction?.likeType || null);
       } finally {

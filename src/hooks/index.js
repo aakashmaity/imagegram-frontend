@@ -2,5 +2,4 @@
 export { usePosts } from './usePosts';
 export { useComments } from './useComments';
 export { useAuth } from './useAuth';
-export { usePost } from './usePost';
 

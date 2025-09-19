@@ -5,6 +5,7 @@ import {
   updatePost,
   deletePost,
   getPostsMadeByUser,
+  getPostById,
 } from "@/services/postService";
 import {
   createPostLike,
@@ -12,11 +13,15 @@ import {
   updatePostLike,
 } from "@/services/likeService";
 
-export const usePosts = (userId, initialOffset = 0, initialLimit = 10) => {
+export const usePosts = (userId, initialOffset = 0, initialLimit = 10, options = {}) => {
+  const { initialFetch = true } = options;
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [hasMore, setHasMore] = useState(true);
+  const [singlePost, setSinglePost] = useState(null);
+  const [singlePostLoading, setSinglePostLoading] = useState(false);
+  const [singlePostError, setSinglePostError] = useState(null);
 
   const fetchPosts = useCallback(
     async (userId, offset = initialOffset, limit = initialLimit) => {
@@ -43,6 +48,25 @@ export const usePosts = (userId, initialOffset = 0, initialLimit = 10) => {
     },
     [initialOffset, initialLimit]
   );
+
+  const fetchPostById = useCallback(async (id) => {
+    if (!id) return;
+    try {
+      setSinglePostLoading(true);
+      const result = await getPostById(id);
+      if (result.success) {
+        const data = result.data?.post || result.data;
+        setSinglePost(data);
+        setSinglePostError(null);
+      } else {
+        setSinglePostError(result.error?.message || "Failed to fetch post");
+      }
+    } catch (err) {
+      setSinglePostError("Failed to fetch post");
+    } finally {
+      setSinglePostLoading(false);
+    }
+  }, []);
 
   const loadMorePosts = async () => {
     if (loading || !hasMore) return;
@@ -201,8 +225,10 @@ export const usePosts = (userId, initialOffset = 0, initialLimit = 10) => {
   };
 
   useEffect(() => {
-    fetchPosts(userId);
-  }, [fetchPosts, userId]);
+    if (initialFetch) {
+      fetchPosts(userId);
+    }
+  }, [fetchPosts, userId, initialFetch]);
 
   return {
     posts,
@@ -215,5 +241,9 @@ export const usePosts = (userId, initialOffset = 0, initialLimit = 10) => {
     updatePost: updatePostHandler,
     deletePost: deletePostHandler,
     handleReactionChange,
+    singlePost,
+    singlePostLoading,
+    singlePostError,
+    fetchPostById,
   };
 };

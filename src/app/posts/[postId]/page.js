@@ -5,7 +5,8 @@ import Layout from '@/components/layout/Layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { RefreshCw, AlertTriangle } from 'lucide-react';
 import PostCard from '@/components/features/PostCard';
-import { useAuth, usePost } from '@/hooks';
+import { useEffect } from 'react';
+import { useAuth, usePosts } from '@/hooks';
 
 function PostLoadingSkeleton() {
   return (
@@ -22,13 +23,22 @@ function PostLoadingSkeleton() {
 export default function PostPage({ params }) {
   const { postId } = use(params);
   const { user: currentUser } = useAuth();
-  const { post, loading, error } = usePost(postId);
+  const {
+    singlePost,
+    singlePostLoading,
+    singlePostError,
+    fetchPostById,
+  } = usePosts(undefined, 0, 10, { initialFetch: false });
+
+  useEffect(() => {
+    fetchPostById(postId);
+  }, [fetchPostById, postId]);
 
   return (
     <Layout>
       <div className="min-h-screen bg-background">
         <div className="max-w-2xl mx-auto py-8 px-4">
-          {error ? (
+          {singlePostError ? (
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-start space-x-3">
@@ -40,11 +50,11 @@ export default function PostPage({ params }) {
                 </div>
               </CardContent>
             </Card>
-          ) : loading ? (
+          ) : singlePostLoading ? (
             <PostLoadingSkeleton />
-          ) : post ? (
+          ) : singlePost ? (
             <PostCard
-              post={post}
+              post={singlePost}
               currentUserId={currentUser?._id}
               showOwnerActions={false}
             />

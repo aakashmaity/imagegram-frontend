@@ -20,6 +20,24 @@ export const getALLPosts = async (offset = 0, limit = 5) => {
   }
 };
 
+export const getPostById = async (postId) => {
+  try {
+    const response = await postsApi.getPostById(postId);
+    return {
+      success: true,
+      data: response.data,
+      error: null,
+    };
+  } catch (error) {
+    console.error('Error fetching post by id:', error);
+    return {
+      success: false,
+      data: null,
+      error: error.message,
+    };
+  }
+};
+
 export const getPostsMadeByUser = async (userId, offset = 0, limit = 5) => {
   try {
     const response = await postsApi.getPostsMadeByUser(userId, offset, limit);

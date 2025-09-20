@@ -36,4 +36,12 @@ export const usersApi = {
   // Unfollow a user
   unfollowUser: (userId) => 
     axiosInstance.delete(`/users/${userId}/follow`),
+
+  // Get followers list
+  getFollowers: (userId, offset = 0, limit = 30) =>
+    axiosInstance.get(`/users/${userId}/followers?offset=${offset}&limit=${limit}`),
+
+  // Get following list
+  getFollowing: (userId, offset = 0, limit = 30) =>
+    axiosInstance.get(`/users/${userId}/following?offset=${offset}&limit=${limit}`),
 };

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks";
 import { useUser } from "@/hooks/useUser";
 import Link from "next/link";
+import FollowButton from "@/components/features/FollowButton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -91,29 +92,38 @@ export default function SearchPage() {
               ) : (
                 <div className="space-y-3">
                   {userList?.map((u) => (
-                    <Link key={u._id} href={`/users/${u._id}`} className="block">
-                      <Card className="bg-card/70 border-border/50 hover:bg-accent transition-colors">
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                              <Avatar className="w-10 h-10">
-                                <AvatarImage src={u.avatar} alt={u.username} />
-                                <AvatarFallback>
-                                  {u.username?.[0]?.toUpperCase() || "U"}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <div className="font-medium">{u.username}</div>
-                                <div className="text-sm text-muted-foreground">
-                                  {u.fullName || u.username}
-                                </div>
+                    <Card key={u._id} className="bg-card/70 border-border/50 hover:bg-accent/60 transition-colors">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <Link href={`/users/${u._id}`} className="flex items-center space-x-3">
+                            <Avatar className="w-10 h-10">
+                              <AvatarImage src={u.avatar} alt={u.username} />
+                              <AvatarFallback>
+                                {u.username?.[0]?.toUpperCase() || "U"}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="font-medium">{u.username}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {u.fullName || u.username}
                               </div>
                             </div>
-                            <Button variant="secondary" size="sm">View</Button>
+                          </Link>
+                          <div className="flex items-center space-x-3">
+                            <FollowButton
+                              targetUserId={u._id}
+                              initialIsFollowing={Array.isArray(u?.followers) ? false : !!u.isFollowing}
+                              initialFollowersCount={Array.isArray(u?.followers) ? u.followers.length : (u.followers ?? 0)}
+                              size="sm"
+                              variant={u.isFollowing ? 'secondary' : 'default'}
+                            />
+                            <Link href={`/users/${u._id}`}>
+                              <Button variant="secondary" size="sm">View</Button>
+                            </Link>
                           </div>
-                        </CardContent>
-                      </Card>
-                    </Link>
+                        </div>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
               )}

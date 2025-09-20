@@ -161,3 +161,37 @@ export const unfollowUser = async (userId) => {
   }
 };
 
+export const getFollowers = async (userId, offset = 0, limit = 30) => {
+  try {
+    const response = await usersApi.getFollowers(userId, offset, limit);
+    return {
+      success: true,
+      data: response.data,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      data: [],
+      error: error.message,
+    };
+  }
+};
+
+export const getFollowing = async (userId, offset = 0, limit = 30) => {
+  try {
+    const response = await usersApi.getFollowing(userId, offset, limit);
+    return {
+      success: true,
+      data: response.data,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      data: [],
+      error: error.message,
+    };
+  }
+};
+

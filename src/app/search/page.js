@@ -112,8 +112,8 @@ export default function SearchPage() {
                           <div className="flex items-center space-x-3">
                             <FollowButton
                               targetUserId={u._id}
-                              initialIsFollowing={!!u.isFollowing}
-                              initialFollowersCount={u.followers ?? 0}
+                              initialIsFollowing={Array.isArray(u?.followers) ? false : !!u.isFollowing}
+                              initialFollowersCount={Array.isArray(u?.followers) ? u.followers.length : (u.followers ?? 0)}
                               size="sm"
                               variant={u.isFollowing ? 'secondary' : 'default'}
                             />

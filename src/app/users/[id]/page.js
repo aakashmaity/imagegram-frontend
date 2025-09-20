@@ -59,11 +59,11 @@ function PostsLoadingSkeleton() {
   );
 }
 
-function ProfileSection({ user, isOwner, totalPosts }) {
+function ProfileSection({ user, isOwner, totalPosts, currentUserId }) {
   const [followersOpen, setFollowersOpen] = useState(false);
   const [followingOpen, setFollowingOpen] = useState(false);
-  const [followersCount, setFollowersCount] = useState(user?.followers ?? 0);
-  const [isFollowing, setIsFollowing] = useState(!!user?.isFollowing);
+  const [followersCount, setFollowersCount] = useState(Array.isArray(user?.followers) ? user.followers.length : (user?.followers ?? 0));
+  const [isFollowing, setIsFollowing] = useState(Array.isArray(user?.followers) ? user.followers.includes?.(currentUserId) : !!user?.isFollowing);
 
   return (
     <Card className="mb-8">
@@ -111,7 +111,7 @@ function ProfileSection({ user, isOwner, totalPosts }) {
             <div className="text-sm text-muted-foreground">Followers</div>
           </div>
           <div className="text-center">
-            <button className="text-2xl font-bold hover:underline" onClick={() => setFollowingOpen(true)}>{user?.following ?? 0}</button>
+            <button className="text-2xl font-bold hover:underline" onClick={() => setFollowingOpen(true)}>{Array.isArray(user?.following) ? user.following.length : (user?.following ?? 0)}</button>
             <div className="text-sm text-muted-foreground">Following</div>
           </div>
         </div>
@@ -137,8 +137,8 @@ function ProfileSection({ user, isOwner, totalPosts }) {
           </div>
         </div>
 
-        <FollowListDialog open={followersOpen} onOpenChange={setFollowersOpen} userId={user?._id} type="followers" />
-        <FollowListDialog open={followingOpen} onOpenChange={setFollowingOpen} userId={user?._id} type="following" />
+        <FollowListDialog open={followersOpen} onOpenChange={setFollowersOpen} userId={user?._id} type="followers" items={Array.isArray(user?.followers) ? user.followers : undefined} />
+        <FollowListDialog open={followingOpen} onOpenChange={setFollowingOpen} userId={user?._id} type="following" items={Array.isArray(user?.following) ? user.following : undefined} />
       </CardContent>
     </Card>
   );
@@ -230,7 +230,7 @@ export default function UserPage({ params }) {
           ) : userLoading ? (
             <UserLoadingSkeleton />
           ) : (
-            <ProfileSection totalPosts={posts?.length} user={user} isOwner={user?._id && currentUser?._id ? user._id === currentUser._id : false} />
+            <ProfileSection totalPosts={posts?.length} user={user} isOwner={user?._id && currentUser?._id ? user._id === currentUser._id : false} currentUserId={currentUser?._id} />
           )}
 
           <div className="mb-6">

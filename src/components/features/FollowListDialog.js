@@ -8,12 +8,18 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { getFollowers, getFollowing } from '@/services/userService';
 
-const FollowListDialog = ({ open, onOpenChange, userId, type = 'followers' }) => {
+const FollowListDialog = ({ open, onOpenChange, userId, type = 'followers', items: providedItems }) => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!open || !userId) return;
+    if (!open) return;
+    // If items are provided, use them directly and skip network call
+    if (Array.isArray(providedItems)) {
+      setItems(providedItems);
+      return;
+    }
+    if (!userId) return;
     const run = async () => {
       setLoading(true);
       const result = type === 'followers' ? await getFollowers(userId) : await getFollowing(userId);
@@ -24,7 +30,7 @@ const FollowListDialog = ({ open, onOpenChange, userId, type = 'followers' }) =>
       setLoading(false);
     };
     run();
-  }, [open, userId, type]);
+  }, [open, userId, type, providedItems]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -46,15 +52,15 @@ const FollowListDialog = ({ open, onOpenChange, userId, type = 'followers' }) =>
               <div key={u._id} className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <Avatar className="w-8 h-8">
-                    <AvatarImage src={u.avatar} alt={u.username} />
-                    <AvatarFallback>{u.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
+                    <AvatarImage src={u.avatar || u.avtar} alt={u.username || u.fullname} />
+                    <AvatarFallback>{(u.username?.[0] || u.fullname?.[0])?.toUpperCase() || 'U'}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <div className="text-sm font-medium">{u.username}</div>
-                    <div className="text-xs text-muted-foreground">{u.fullName || u.username}</div>
+                    <div className="text-sm font-medium">{u.username || u.fullname}</div>
+                    <div className="text-xs text-muted-foreground">{u.fullName || u.fullname || u.username}</div>
                   </div>
                 </div>
-                <Link href={`/users/${u._id}`}>
+                <Link href={`/users/${u._id || u}`}> 
                   <Button size="sm" variant="secondary">View</Button>
                 </Link>
               </div>

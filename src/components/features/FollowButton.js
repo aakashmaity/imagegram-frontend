@@ -103,9 +103,9 @@ export default function FollowButton({
 
       try {
         if (willFollow) {
-          await followUserRequest(targetUserId);
+          await followUserRequest({ currentUserId, targetUserId });
         } else {
-          await unfollowUserRequest(targetUserId);
+          await unfollowUserRequest({ currentUserId, targetUserId });
         }
       } catch (err) {
         // Revert on failure

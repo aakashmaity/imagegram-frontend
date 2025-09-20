@@ -30,10 +30,10 @@ export const usersApi = {
     axiosInstance.get(`/users?search=${encodeURIComponent(query)}&offset=${offset}&limit=${limit}`),
 
   // Follow a user
-  followUser: (userId) => 
-    axiosInstance.post(`/users/${userId}/follow`),
+  followUser: ({ currentUserId, targetUserId }) => 
+    axiosInstance.post(`/users/${targetUserId}/follow`, { currentUserId, targetUserId }),
 
   // Unfollow a user
-  unfollowUser: (userId) => 
-    axiosInstance.delete(`/users/${userId}/follow`),
+  unfollowUser: ({ currentUserId, targetUserId }) => 
+    axiosInstance.post(`/users/${targetUserId}/unfollow`, { currentUserId, targetUserId }),
 };

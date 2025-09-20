@@ -125,9 +125,9 @@ export const searchUsers = async (query, offset = 0, limit = 10) => {
   }
 };
 
-export const followUser = async (userId) => {
+export const followUser = async ({ currentUserId, targetUserId }) => {
   try {
-    const response = await usersApi.followUser(userId);
+    const response = await usersApi.followUser({ currentUserId, targetUserId });
     return {
       success: true,
       data: response.data,
@@ -143,9 +143,9 @@ export const followUser = async (userId) => {
   }
 };
 
-export const unfollowUser = async (userId) => {
+export const unfollowUser = async ({ currentUserId, targetUserId }) => {
   try {
-    const response = await usersApi.unfollowUser(userId);
+    const response = await usersApi.unfollowUser({ currentUserId, targetUserId });
     return {
       success: true,
       data: response.data,

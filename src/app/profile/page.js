@@ -1,24 +1,24 @@
-'use client';
+"use client";
 
-
-import { Settings, Edit, Camera, User, Mail, Calendar } from 'lucide-react';
-import Layout from '@/components/layout/Layout';
-import PostCard from '@/components/features/PostCard';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useAuth, usePosts } from '@/hooks';
+import { Settings, Edit, Camera, User, Mail, Calendar } from "lucide-react";
+import Layout from "@/components/layout/Layout";
+import PostCard from "@/components/features/PostCard";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth, usePosts } from "@/hooks";
 
 export default function ProfilePage() {
   const { user, loading: userLoading } = useAuth();
-  const { posts, loading: postsLoading, handleReactionChange, updatePost, deletePost } = usePosts();
+  const {
+    posts,
+    loading: postsLoading,
+    handleReactionChange,
+    updatePost,
+    deletePost,
+  } = usePosts();
 
-  const userPosts = posts?.filter(post => post.user?._id === user._id);
-
-  const handleLikeChange = async (postId, reactionType, isActive, previousUserReaction) => {
-    const payload = { onModel: 'Post', likableId: postId, reactionType, previousUserReaction };
-    await handleReactionChange(payload);
-  };
+  const userPosts = posts?.filter((post) => post.user?._id === user._id);
 
 
   return (
@@ -39,7 +39,9 @@ export default function ProfilePage() {
                   <div>
                     <h1 className="text-2xl font-bold">{user?.fullname}</h1>
                     <p className="text-muted-foreground">{user?.username}</p>
-                    <p className="text-sm text-muted-foreground mt-1">{user?.bio}</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {user?.bio}
+                    </p>
                   </div>
                 </div>
                 <Button variant="outline" size="sm">
@@ -51,15 +53,26 @@ export default function ProfilePage() {
               {/* Stats */}
               <div className="grid grid-cols-3 gap-4 mb-6">
                 <div className="text-center">
-                  <div className="text-2xl font-bold">{user?.posts ?? (Array.isArray(user?.postIds) ? user.postIds.length : 0)}</div>
+                  <div className="text-2xl font-bold">
+                    {user?.posts ??
+                      (Array.isArray(user?.postIds) ? user.postIds.length : 0)}
+                  </div>
                   <div className="text-sm text-muted-foreground">Posts</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold">{Array.isArray(user?.followers) ? user.followers.length : (user?.followers ?? 0)}</div>
+                  <div className="text-2xl font-bold">
+                    {Array.isArray(user?.followers)
+                      ? user.followers.length
+                      : user?.followers ?? 0}
+                  </div>
                   <div className="text-sm text-muted-foreground">Followers</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold">{Array.isArray(user?.following) ? user.following.length : (user?.following ?? 0)}</div>
+                  <div className="text-2xl font-bold">
+                    {Array.isArray(user?.following)
+                      ? user.following.length
+                      : user?.following ?? 0}
+                  </div>
                   <div className="text-sm text-muted-foreground">Following</div>
                 </div>
               </div>
@@ -72,12 +85,17 @@ export default function ProfilePage() {
                 </div>
                 <div className="flex items-center space-x-2">
                   <Calendar className="w-4 h-4" />
-                  <span>Joined {user?.joinDate?.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) || 'Recently'}</span>
+                  <span>
+                    Joined{" "}
+                    {user?.joinDate?.toLocaleDateString("en-US", {
+                      month: "long",
+                      year: "numeric",
+                    }) || "Recently"}
+                  </span>
                 </div>
               </div>
             </CardContent>
           </Card>
-
 
           {/* Posts Section */}
           <div className="mb-6">
@@ -116,8 +134,6 @@ export default function ProfilePage() {
                   <PostCard
                     key={post._id}
                     post={post}
-                    onLikeChange={handleLikeChange}
-                    showOwnerActions={true}
                     currentUserId={user?._id}
                     onUpdate={updatePost}
                     onReactionChange={handleReactionChange}

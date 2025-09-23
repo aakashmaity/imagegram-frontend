@@ -10,6 +10,8 @@ import { useUser } from "@/hooks/useUser";
 import { useAuth, usePosts } from "@/hooks";
 import { Button } from "@/components/ui/button";
 import FollowButton from "@/components/features/FollowButton";
+import { deletePost, updatePost } from "@/services/postService";
+
 
 function UserLoadingSkeleton() {
   return (
@@ -57,7 +59,12 @@ function PostsLoadingSkeleton() {
   );
 }
 
-function ProfileSection({ user, isOwner, totalPosts, currentUser, onUpdateUser, onUpdateAuth }) {
+function ProfileSection({
+  user,
+  isOwner,
+  totalPosts,
+  currentUser,
+}) {
   return (
     <Card className="mb-8">
       <CardContent className="p-6">
@@ -75,7 +82,9 @@ function ProfileSection({ user, isOwner, totalPosts, currentUser, onUpdateUser, 
                 {user?.fullName || user?.username}
               </p>
               {user?.bio && (
-                <p className="text-sm text-muted-foreground mt-1">{user?.bio}</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {user?.bio}
+                </p>
               )}
             </div>
           </div>
@@ -87,8 +96,6 @@ function ProfileSection({ user, isOwner, totalPosts, currentUser, onUpdateUser, 
             <FollowButton
               targetUser={user}
               currentUser={currentUser}
-              onTargetUserUpdate={onUpdateUser}
-              onAuthUserUpdate={onUpdateAuth}
               size="sm"
             />
           )}
@@ -100,11 +107,19 @@ function ProfileSection({ user, isOwner, totalPosts, currentUser, onUpdateUser, 
             <div className="text-sm text-muted-foreground">Posts</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold">{Array.isArray(user?.followers) ? user.followers.length : (user?.followers ?? 0)}</div>
+            <div className="text-2xl font-bold">
+              {Array.isArray(user?.followers)
+                ? user.followers.length
+                : user?.followers ?? 0}
+            </div>
             <div className="text-sm text-muted-foreground">Followers</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold">{Array.isArray(user?.following) ? user.following.length : (user?.following ?? 0)}</div>
+            <div className="text-2xl font-bold">
+              {Array.isArray(user?.following)
+                ? user.following.length
+                : user?.following ?? 0}
+            </div>
             <div className="text-sm text-muted-foreground">Following</div>
           </div>
         </div>
@@ -141,6 +156,7 @@ function PostsSection({
   loadMorePosts,
   onDelete,
   postLoading,
+  handleReactionChange
 }) {
   if (posts?.length === 0) {
     return (
@@ -162,9 +178,11 @@ function PostsSection({
         <PostCard
           key={post._id}
           post={post}
-          showOwnerActions={true}
           currentUserId={currentUser?._id}
-          onDelete={onDelete}
+          onUpdate={updatePost}
+          onReactionChange={handleReactionChange}
+          onDelete={deletePost}
+          showOwnerActions={true}
         />
       ))}
 
@@ -196,7 +214,11 @@ export default function UserPage({ params }) {
   const { id } = use(params);
   const userId = id;
 
-  const { loading: userLoading, error: userError, user, setUser } = useUser(userId);
+  const {
+    loading: userLoading,
+    error: userError,
+    user,
+  } = useUser(userId);
   const {
     posts,
     hasMore,
@@ -204,9 +226,10 @@ export default function UserPage({ params }) {
     loading: postLoading,
     error: postError,
     deletePost,
+    handleReactionChange
   } = usePosts(userId);
 
-  const { user: currentUser, updateUser: updateAuthUser } = useAuth();
+  const { user: currentUser } = useAuth();
   return (
     <Layout>
       <div className="min-h-screen bg-background">
@@ -223,10 +246,12 @@ export default function UserPage({ params }) {
             <ProfileSection
               totalPosts={posts?.length}
               user={user}
-              isOwner={user?._id && currentUser?._id ? user._id === currentUser._id : false}
+              isOwner={
+                user?._id && currentUser?._id
+                  ? user._id === currentUser._id
+                  : false
+              }
               currentUser={currentUser}
-              onUpdateUser={setUser}
-              onUpdateAuth={updateAuthUser}
             />
           )}
 
@@ -251,6 +276,7 @@ export default function UserPage({ params }) {
                   hasMore={hasMore}
                   loadMorePosts={loadMorePosts}
                   postLoading={postLoading}
+                  handleReactionChange={handleReactionChange}
                 />
               </>
             )}

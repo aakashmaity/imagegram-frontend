@@ -31,9 +31,9 @@ export const usersApi = {
 
   // Follow a user
   followUser: (userId) => 
-    axiosInstance.post(`/users/${userId}/follow`),
+    axiosInstance.put(`/users/${userId}/follow`),
 
   // Unfollow a user
   unfollowUser: (userId) => 
-    axiosInstance.delete(`/users/${userId}/follow`),
+    axiosInstance.put(`/users/${userId}/unfollow`),
 };

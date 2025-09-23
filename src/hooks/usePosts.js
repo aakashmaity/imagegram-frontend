@@ -133,7 +133,8 @@ export const usePosts = (userId, initialOffset = 0, initialLimit = 10, options =
     try {
       const result = await deletePost(postId);
       if (result.success) {
-        setPosts((prev) => prev.filter((post) => post._id !== postId));
+        const postList = posts.filter((post) => post?._id !== postId);
+        setPosts(postList);
         return { success: true };
       } else {
         return { success: false, error: result.error };

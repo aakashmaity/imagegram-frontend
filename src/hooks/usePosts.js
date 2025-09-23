@@ -132,12 +132,19 @@ export const usePosts = (userId, initialOffset = 0, initialLimit = 10, options =
   const deletePostHandler = async (postId) => {
     try {
       const result = await deletePost(postId);
+      
       if (result.success) {
-        const postList = posts.filter((post) => post?._id !== postId);
-        setPosts(postList);
+        // Remove deleted post from posts array
+        setPosts((prevPosts) => prevPosts.filter((post) => post._id !== postId));
+        
+        // Clear single post if it was the deleted one
+        if (singlePost?._id === postId) {
+          setSinglePost(null);
+        }
+        
         return { success: true };
       } else {
-        return { success: false, error: result.error };
+        return { success: false, error: result.error || "Failed to delete post" };
       }
     } catch (err) {
       return { success: false, error: "Failed to delete post" };

@@ -138,6 +138,7 @@ export default function ProfilePage() {
                     onUpdate={updatePost}
                     onReactionChange={handleReactionChange}
                     onDelete={deletePost}
+                    showOwnerActions={true}
                   />
                 ))}
               </div>

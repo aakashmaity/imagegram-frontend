@@ -83,12 +83,13 @@ const PostCard = ({
     try {
       setIsSubmitting(true);
       const result = await onDelete?.(postId);
-      if (result?.success || result === true) {
+      
+      if (result?.success) {
         setIsDeleteOpen(false);
         setIsMenuOpen(false);
       }
     } catch (err) {
-      // no-op
+      console.error("Error deleting post:", err);
     } finally {
       setIsSubmitting(false);
     }

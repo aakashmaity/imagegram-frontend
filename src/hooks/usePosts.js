@@ -12,7 +12,6 @@ import {
   deletePostLike,
   updatePostLike,
 } from "@/services/likeService";
-import { filterValidPosts, isValidPost } from "@/utils/postUtils";
 
 export const usePosts = (userId, initialOffset = 0, initialLimit = 10, options = {}) => {
   const { initialFetch = true } = options;
@@ -36,11 +35,9 @@ export const usePosts = (userId, initialOffset = 0, initialLimit = 10, options =
           : await getALLPosts(offset, limit);
 
         if (result.success) {
-          // Filter out any invalid posts
-          const validPosts = filterValidPosts(result.data.posts);
-          setPosts(validPosts);
+          setPosts(result.data.posts);
           setError(null);
-          setHasMore(result.data.totalDocuments > validPosts.length);
+          setHasMore(result.data.totalDocuments > result.data.posts.length);
         } else {
           setError(result.error.message);
         }
@@ -62,14 +59,8 @@ export const usePosts = (userId, initialOffset = 0, initialLimit = 10, options =
       console.log("result", result)
       if (result.success) {
         const data = result.data?.post;
-        // Check if the post is valid before setting it
-        if (isValidPost(data)) {
-          setSinglePost(data);
-          setSinglePostError(null);
-        } else {
-          setSinglePostError("Post not found or invalid");
-          setSinglePost(null);
-        }
+        setSinglePost(data);
+        setSinglePostError(null);
       } else {
         setSinglePostError(result.error?.message || "Failed to fetch post");
       }
@@ -91,11 +82,9 @@ export const usePosts = (userId, initialOffset = 0, initialLimit = 10, options =
         : await getALLPosts(offset, initialLimit);
 
       if (result.success) {
-        // Filter out any invalid posts
-        const validPosts = filterValidPosts(result.data.posts);
-        setPosts((prev) => [...prev, ...validPosts]);
+        setPosts((prev) => [...prev, ...result.data.posts]);
         const totalDocuments = result.data.totalDocuments ?? 0;
-        const accumulatedCount = offset + (validPosts?.length ?? 0);
+        const accumulatedCount = offset + (result.data.posts?.length ?? 0);
         setHasMore(accumulatedCount < totalDocuments);
       } else {
         setError(result.error?.message || "Failed to load more posts");
@@ -142,38 +131,22 @@ export const usePosts = (userId, initialOffset = 0, initialLimit = 10, options =
 
   const deletePostHandler = async (postId) => {
     try {
-      // Call backend to delete the post (hard delete)
       const result = await deletePost(postId);
       
       if (result.success) {
-        // Immediately remove the deleted post from UI state
-        setPosts((prevPosts) => {
-          const updatedPosts = prevPosts.filter((post) => post?._id !== postId);
-          console.log(`Post ${postId} deleted successfully. Remaining posts:`, updatedPosts.length);
-          return updatedPosts;
-        });
+        // Remove deleted post from posts array
+        setPosts((prevPosts) => prevPosts.filter((post) => post._id !== postId));
         
-        // Also update single post state if it matches the deleted post
-        setSinglePost((prevSinglePost) => {
-          if (prevSinglePost?._id === postId) {
-            return null;
-          }
-          return prevSinglePost;
-        });
-        
-        // Optional: Refresh posts from server to ensure consistency
-        // This is a safeguard in case of any edge cases
-        // setTimeout(() => {
-        //   fetchPosts(userId);
-        // }, 1000);
+        // Clear single post if it was the deleted one
+        if (singlePost?._id === postId) {
+          setSinglePost(null);
+        }
         
         return { success: true };
       } else {
-        console.error("Failed to delete post:", result.error);
         return { success: false, error: result.error || "Failed to delete post" };
       }
     } catch (err) {
-      console.error("Error deleting post:", err);
       return { success: false, error: "Failed to delete post" };
     }
   };

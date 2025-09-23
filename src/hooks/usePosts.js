@@ -12,7 +12,7 @@ import {
   deletePostLike,
   updatePostLike,
 } from "@/services/likeService";
-import { filterActivePosts, isPostActive } from "@/utils/postUtils";
+import { filterValidPosts, isValidPost } from "@/utils/postUtils";
 
 export const usePosts = (userId, initialOffset = 0, initialLimit = 10, options = {}) => {
   const { initialFetch = true } = options;
@@ -36,11 +36,11 @@ export const usePosts = (userId, initialOffset = 0, initialLimit = 10, options =
           : await getALLPosts(offset, limit);
 
         if (result.success) {
-          // Filter out any posts that might be marked as deleted
-          const activePosts = filterActivePosts(result.data.posts);
-          setPosts(activePosts);
+          // Filter out any invalid posts
+          const validPosts = filterValidPosts(result.data.posts);
+          setPosts(validPosts);
           setError(null);
-          setHasMore(result.data.totalDocuments > activePosts.length);
+          setHasMore(result.data.totalDocuments > validPosts.length);
         } else {
           setError(result.error.message);
         }
@@ -62,12 +62,12 @@ export const usePosts = (userId, initialOffset = 0, initialLimit = 10, options =
       console.log("result", result)
       if (result.success) {
         const data = result.data?.post;
-        // Check if the post is deleted before setting it
-        if (isPostActive(data)) {
+        // Check if the post is valid before setting it
+        if (isValidPost(data)) {
           setSinglePost(data);
           setSinglePostError(null);
         } else {
-          setSinglePostError("Post not found or has been deleted");
+          setSinglePostError("Post not found or invalid");
           setSinglePost(null);
         }
       } else {
@@ -91,11 +91,11 @@ export const usePosts = (userId, initialOffset = 0, initialLimit = 10, options =
         : await getALLPosts(offset, initialLimit);
 
       if (result.success) {
-        // Filter out any posts that might be marked as deleted
-        const activePosts = filterActivePosts(result.data.posts);
-        setPosts((prev) => [...prev, ...activePosts]);
+        // Filter out any invalid posts
+        const validPosts = filterValidPosts(result.data.posts);
+        setPosts((prev) => [...prev, ...validPosts]);
         const totalDocuments = result.data.totalDocuments ?? 0;
-        const accumulatedCount = offset + (activePosts?.length ?? 0);
+        const accumulatedCount = offset + (validPosts?.length ?? 0);
         setHasMore(accumulatedCount < totalDocuments);
       } else {
         setError(result.error?.message || "Failed to load more posts");
@@ -142,11 +142,31 @@ export const usePosts = (userId, initialOffset = 0, initialLimit = 10, options =
 
   const deletePostHandler = async (postId) => {
     try {
+      // Call backend to delete the post (hard delete)
       const result = await deletePost(postId);
+      
       if (result.success) {
-        // Immediately filter out the deleted post from UI
-        const postList = posts.filter((post) => post?._id !== postId);
-        setPosts(postList);
+        // Immediately remove the deleted post from UI state
+        setPosts((prevPosts) => {
+          const updatedPosts = prevPosts.filter((post) => post?._id !== postId);
+          console.log(`Post ${postId} deleted successfully. Remaining posts:`, updatedPosts.length);
+          return updatedPosts;
+        });
+        
+        // Also update single post state if it matches the deleted post
+        setSinglePost((prevSinglePost) => {
+          if (prevSinglePost?._id === postId) {
+            return null;
+          }
+          return prevSinglePost;
+        });
+        
+        // Optional: Refresh posts from server to ensure consistency
+        // This is a safeguard in case of any edge cases
+        // setTimeout(() => {
+        //   fetchPosts(userId);
+        // }, 1000);
+        
         return { success: true };
       } else {
         console.error("Failed to delete post:", result.error);

@@ -3,5 +3,5 @@ export { cn } from './cn';
 export { formatDate, formatNumber } from './format';
 export { validateEmail, validatePassword, validateRequired, validateImageFile } from './validation';
 export * from './auth';
-export { filterActivePosts, isPostActive } from './postUtils';
+export { filterValidPosts, isValidPost } from './postUtils';
 

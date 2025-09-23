@@ -3,26 +3,27 @@
  */
 
 /**
- * Filters out deleted posts from an array of posts
+ * Filters out invalid posts from an array of posts
  * @param {Array} posts - Array of post objects
- * @returns {Array} Array of active (non-deleted) posts
+ * @returns {Array} Array of valid posts
  */
-export const filterActivePosts = (posts) => {
+export const filterValidPosts = (posts) => {
   if (!Array.isArray(posts)) return [];
   
   return posts.filter(post => 
     post && 
-    !post.deleted && 
-    !post.isDeleted &&
-    post._id // Ensure post has a valid ID
+    post._id && // Ensure post has a valid ID
+    post.caption && // Ensure required fields exist
+    post.image &&
+    post.user
   );
 };
 
 /**
- * Checks if a post is active (not deleted)
+ * Checks if a post is valid
  * @param {Object} post - Post object
- * @returns {boolean} True if post is active, false otherwise
+ * @returns {boolean} True if post is valid, false otherwise
  */
-export const isPostActive = (post) => {
-  return post && !post.deleted && !post.isDeleted && post._id;
+export const isValidPost = (post) => {
+  return post && post._id && post.caption && post.image && post.user;
 };

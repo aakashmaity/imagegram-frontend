@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth, usePosts } from "@/hooks";
-import { filterActivePosts } from "@/utils/postUtils";
+import { filterValidPosts } from "@/utils/postUtils";
 
 export default function ProfilePage() {
   const { user, loading: userLoading } = useAuth();
@@ -19,7 +19,7 @@ export default function ProfilePage() {
     deletePost,
   } = usePosts();
 
-  const userPosts = filterActivePosts(
+  const userPosts = filterValidPosts(
     posts?.filter((post) => post.user?._id === user._id)
   );
 

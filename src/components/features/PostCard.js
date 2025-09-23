@@ -83,16 +83,21 @@ const PostCard = ({
     try {
       setIsSubmitting(true);
       const result = await onDelete?.(postId);
+      
       if (result?.success || result === true) {
+        console.log(`Post ${postId} deleted successfully`);
         setIsDeleteOpen(false);
         setIsMenuOpen(false);
         // Post will be automatically removed from UI by the parent component
+        // No need to do anything else - the usePosts hook handles UI updates
       } else {
         // Handle error case - post deletion failed
         console.error("Failed to delete post:", result?.error);
+        // Keep dialogs open so user can try again or cancel
       }
     } catch (err) {
       console.error("Error during post deletion:", err);
+      // Keep dialogs open for retry
     } finally {
       setIsSubmitting(false);
     }

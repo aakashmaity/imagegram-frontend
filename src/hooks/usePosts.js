@@ -12,6 +12,7 @@ import {
   deletePostLike,
   updatePostLike,
 } from "@/services/likeService";
+import { filterActivePosts, isPostActive } from "@/utils/postUtils";
 
 export const usePosts = (userId, initialOffset = 0, initialLimit = 10, options = {}) => {
   const { initialFetch = true } = options;
@@ -35,9 +36,11 @@ export const usePosts = (userId, initialOffset = 0, initialLimit = 10, options =
           : await getALLPosts(offset, limit);
 
         if (result.success) {
-          setPosts(result.data.posts);
+          // Filter out any posts that might be marked as deleted
+          const activePosts = filterActivePosts(result.data.posts);
+          setPosts(activePosts);
           setError(null);
-          setHasMore(result.data.totalDocuments > result.data.posts.length);
+          setHasMore(result.data.totalDocuments > activePosts.length);
         } else {
           setError(result.error.message);
         }
@@ -59,8 +62,14 @@ export const usePosts = (userId, initialOffset = 0, initialLimit = 10, options =
       console.log("result", result)
       if (result.success) {
         const data = result.data?.post;
-        setSinglePost(data);
-        setSinglePostError(null);
+        // Check if the post is deleted before setting it
+        if (isPostActive(data)) {
+          setSinglePost(data);
+          setSinglePostError(null);
+        } else {
+          setSinglePostError("Post not found or has been deleted");
+          setSinglePost(null);
+        }
       } else {
         setSinglePostError(result.error?.message || "Failed to fetch post");
       }
@@ -82,9 +91,11 @@ export const usePosts = (userId, initialOffset = 0, initialLimit = 10, options =
         : await getALLPosts(offset, initialLimit);
 
       if (result.success) {
-        setPosts((prev) => [...prev, ...result.data.posts]);
+        // Filter out any posts that might be marked as deleted
+        const activePosts = filterActivePosts(result.data.posts);
+        setPosts((prev) => [...prev, ...activePosts]);
         const totalDocuments = result.data.totalDocuments ?? 0;
-        const accumulatedCount = offset + (result.data.posts?.length ?? 0);
+        const accumulatedCount = offset + (activePosts?.length ?? 0);
         setHasMore(accumulatedCount < totalDocuments);
       } else {
         setError(result.error?.message || "Failed to load more posts");
@@ -133,13 +144,16 @@ export const usePosts = (userId, initialOffset = 0, initialLimit = 10, options =
     try {
       const result = await deletePost(postId);
       if (result.success) {
+        // Immediately filter out the deleted post from UI
         const postList = posts.filter((post) => post?._id !== postId);
         setPosts(postList);
         return { success: true };
       } else {
-        return { success: false, error: result.error };
+        console.error("Failed to delete post:", result.error);
+        return { success: false, error: result.error || "Failed to delete post" };
       }
     } catch (err) {
+      console.error("Error deleting post:", err);
       return { success: false, error: "Failed to delete post" };
     }
   };

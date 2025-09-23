@@ -86,9 +86,13 @@ const PostCard = ({
       if (result?.success || result === true) {
         setIsDeleteOpen(false);
         setIsMenuOpen(false);
+        // Post will be automatically removed from UI by the parent component
+      } else {
+        // Handle error case - post deletion failed
+        console.error("Failed to delete post:", result?.error);
       }
     } catch (err) {
-      // no-op
+      console.error("Error during post deletion:", err);
     } finally {
       setIsSubmitting(false);
     }

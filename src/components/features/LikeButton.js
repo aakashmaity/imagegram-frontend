@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/utils";
 import { REACTION_CONFIG } from "@/constants";
 
-// Responsive behavior and sizes handled via Tailwind classes
+
 const HOVER_HIDE_DELAY_MS = 150;
 
 const LikeButton = ({
@@ -73,7 +73,7 @@ const LikeButton = ({
     setShowMobileReactions((prev) => !prev);
   }, [isLoading]);
 
-  // ✅ simplified reaction logic
+  
   const handleReaction = useCallback(
     async (reactionType) => {
       if (isLoading) return;
@@ -91,7 +91,6 @@ const LikeButton = ({
           updatedReactions = updatedReactions.filter(
             (like) => like.user?._id !== currentUserId
           );
-          console.log("updatedReactions", updatedReactions);
           await onReactionChange?.(postId, reactionType, false, userReaction);
           setCurrentUserReaction(null);
         } else {

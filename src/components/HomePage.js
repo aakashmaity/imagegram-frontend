@@ -127,6 +127,7 @@ export default function HomePage() {
                   onUpdate={updatePost}
                   onReactionChange={handleReactionChange}
                   onDelete={deletePost}
+                  showOwnerActions={true}
                 />
               ))}
               

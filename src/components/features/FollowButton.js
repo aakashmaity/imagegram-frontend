@@ -2,18 +2,12 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { followUser as followUserRequest, unfollowUser as unfollowUserRequest } from "@/services/userService";
+import {
+  followUser as followUserRequest,
+  unfollowUser as unfollowUserRequest,
+} from "@/services/userService";
+import { RefreshCw } from "lucide-react";
 
-/**
- * Follow/Unfollow Button with optimistic UI updates.
- *
- * Props:
- * - targetUser: user object to follow/unfollow (must contain _id and optionally followers array)
- * - currentUser: logged-in user object (must contain _id and optionally following array)
- * - onTargetUserUpdate: function(newTargetUser) -> void, to update target user locally (optional)
- * - onAuthUserUpdate: function(partialAuthUser) -> void, to update auth user locally (optional)
- * - size/variant/disabled: forwarded to Button
- */
 export default function FollowButton({
   targetUser,
   currentUser,
@@ -40,15 +34,22 @@ export default function FollowButton({
       ? currentUser.following.map(String)
       : [];
 
-    return targetFollowers.includes(String(currentUserId)) || authFollowing.includes(String(targetUserId));
-  }, [currentUserId, targetUserId, targetUser?.followers, currentUser?.following]);
+    return (
+      targetFollowers.includes(String(currentUserId)) ||
+      authFollowing.includes(String(targetUserId))
+    );
+  }, 
+  [ currentUserId, targetUserId, targetUser?.followers, currentUser?.following]
+);
 
   const applyOptimistic = useCallback(
     (nextIsFollowing) => {
       if (typeof onTargetUserUpdate === "function") {
         onTargetUserUpdate((prev) => {
           const safePrev = prev ?? targetUser ?? {};
-          const prevFollowers = Array.isArray(safePrev.followers) ? safePrev.followers.map(String) : [];
+          const prevFollowers = Array.isArray(safePrev.followers)
+            ? safePrev.followers.map(String)
+            : [];
 
           let nextFollowers;
           if (nextIsFollowing) {
@@ -58,7 +59,9 @@ export default function FollowButton({
               nextFollowers = prevFollowers;
             }
           } else {
-            nextFollowers = prevFollowers.filter((id) => String(id) !== String(currentUserId));
+            nextFollowers = prevFollowers.filter(
+              (id) => String(id) !== String(currentUserId)
+            );
           }
 
           return { ...safePrev, followers: nextFollowers };
@@ -81,10 +84,10 @@ export default function FollowButton({
           nextFollowing = prevFollowing.filter((id) => String(id) !== String(targetUserId));
         }
 
-        onAuthUserUpdate({ following: nextFollowing });
+        onAuthUserUpdate({ ...currentUser, following: nextFollowing });
       }
     },
-    [onTargetUserUpdate, onAuthUserUpdate, currentUser?.following, currentUserId, targetUser, targetUserId]
+    [onTargetUserUpdate, onAuthUserUpdate, currentUser, currentUserId, targetUser, targetUserId] 
   );
 
   const handleClick = useCallback(
@@ -129,8 +132,13 @@ export default function FollowButton({
       onClick={handleClick}
       className={className}
     >
-      {submitting ? (isFollowing ? "Unfollowing..." : "Following...") : isFollowing ? "Unfollow" : "Follow"}
+      {submitting ? (
+        <>
+          <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+        </>
+      ) : (
+        isFollowing ? "Unfollow" : "Follow"
+      )}
     </Button>
   );
 }
-

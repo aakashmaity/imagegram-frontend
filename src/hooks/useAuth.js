@@ -161,7 +161,7 @@ export const useAuth = () => {
     user,
     loading,
     isAuthenticated: isAuth,
-    
+    setUser,
     // Actions
     signin,
     signup,

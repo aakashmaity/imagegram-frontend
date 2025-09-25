@@ -16,8 +16,8 @@ export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
   const { searchUsers, userList, loading: usersLoading } = useUser();
-  const { user: currentUser, updateUser: updateAuthUser } = useAuth();
 
+  
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
@@ -27,6 +27,12 @@ export default function SearchPage() {
     // Fetch matching users from backend
     await searchUsers(searchQuery);
   };
+
+  const handleViewUserPage = async(userId) => {
+    if(userId){
+      window.location.href = `/users/${userId}`;
+    }
+  }
 
   return (
     <Layout>
@@ -93,10 +99,16 @@ export default function SearchPage() {
               ) : (
                 <div className="space-y-3">
                   {userList?.map((u) => (
-                    <Card key={u._id} className="bg-card/70 border-border/50 hover:bg-accent/60 transition-colors">
+                    <Card
+                      key={u._id}
+                      className="bg-card/70 border-border/50 hover:bg-accent/60 transition-colors"
+                    >
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
-                          <Link href={`/users/${u._id}`} className="flex items-center space-x-3">
+                          <Link
+                            href={`/users/${u._id}`}
+                            className="flex items-center space-x-3"
+                          >
                             <Avatar className="w-10 h-10">
                               <AvatarImage src={u.avatar} alt={u.username} />
                               <AvatarFallback>
@@ -104,20 +116,15 @@ export default function SearchPage() {
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <div className="font-medium">{u.username}</div>
+                              <div className="font-medium">{u?.fullname || u.username}</div>
                               <div className="text-sm text-muted-foreground">
-                                {u.fullName || u.username}
+                                {u.username}
                               </div>
                             </div>
                           </Link>
-                          <FollowButton
-                            targetUser={u}
-                            currentUser={currentUser}
-                            onTargetUserUpdate={() => {}}
-                            onAuthUserUpdate={updateAuthUser}
-                            size="sm"
-                            variant="secondary"
-                          />
+                          <Button variant="secondary" size="sm" onClick={() => handleViewUserPage(u._id)}>
+                            View
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>

@@ -17,18 +17,20 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/utils';
-import { useAuth } from '../../hooks';
+import { useAuth, useNotifications } from '../../hooks';
 
 const Navigation = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const { isAuthenticated, user, signout } = useAuth();
 
+  const { unreadCount } = useNotifications({ pageSize: 0, pollMs: 15000 });
+
   const navItems = [
     { href: '/', icon: Home, label: 'Home' },
     { href: '/upload', icon: Plus, label: 'Upload' },
     { href: '/search', icon: Search, label: 'Search' },
-    { href: '/activity', icon: Heart, label: 'Activity' },
+    { href: '/activity', icon: Heart, label: 'Activity', badge: unreadCount },
     { href: user?._id ? `/users/${user._id}` : '/profile', icon: User, label: 'Profile' },
   ];
 
@@ -68,7 +70,14 @@ const Navigation = () => {
                           : "text-muted-foreground hover:text-foreground hover:bg-accent"
                       )}
                     >
-                      <Icon className="w-5 h-5" />
+                      <div className="relative">
+                        <Icon className="w-5 h-5" />
+                        {item.badge > 0 && (
+                          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] leading-none px-1.5 py-0.5 rounded-full min-w-[16px] text-center">
+                            {item.badge > 99 ? '99+' : item.badge}
+                          </span>
+                        )}
+                      </div>
                       <span className="text-sm font-medium">{item.label}</span>
                     </Link>
                   );

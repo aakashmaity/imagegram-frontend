@@ -15,6 +15,7 @@ const getSocketServerUrl = () => {
   try {
     const url = new URL(apiUrl);
     // Strip path like /api/v1 to get origin
+    console.log(url)
     return `${url.protocol}//${url.host}`;
   } catch {
     // Fallback to localhost

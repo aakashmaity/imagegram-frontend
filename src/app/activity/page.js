@@ -1,45 +1,84 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Heart, MessageCircle, User, Bell } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { axiosInstance } from '@/api';
+import { useAuth } from '@/hooks';
+import { getSocket } from '@/utils/socket';
 
 export default function ActivityPage() {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { isAuthenticated } = useAuth();
+
+  const mapNotificationToActivity = (n) => {
+    const base = {
+      id: n._id || crypto.randomUUID(),
+      timestamp: new Date(n.createdAt || Date.now()),
+      user: {
+        name: n?.sender?.username || 'Someone',
+        avatar: null,
+      },
+    };
+
+    switch (n.type) {
+      case 'LIKE_POST':
+        return { ...base, type: 'like', post: { id: n.entityId, caption: n.message } };
+      case 'LIKE_COMMENT':
+        return { ...base, type: 'like', post: { id: n.entityId, caption: n.message } };
+      case 'COMMENT_POST':
+        return { ...base, type: 'comment', post: { id: n.entityId, caption: n.message }, comment: { text: n.message } };
+      case 'FOLLOW_USER':
+        return { ...base, type: 'follow' };
+      default:
+        return { ...base, type: 'other' };
+    }
+  };
 
   useEffect(() => {
-    // Simulate loading activities
-    setTimeout(() => {
-      setActivities([
-        {
-          id: '1',
-          type: 'like',
-          user: { name: 'John Doe', avatar: null },
-          post: { id: '1', caption: 'Amazing sunset today!' },
-          timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-        },
-        {
-          id: '2',
-          type: 'comment',
-          user: { name: 'Jane Smith', avatar: null },
-          post: { id: '2', caption: 'Beautiful architecture' },
-          comment: { text: 'This is incredible!' },
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-        },
-        {
-          id: '3',
-          type: 'follow',
-          user: { name: 'Mike Johnson', avatar: null },
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-        },
-      ]);
-      setLoading(false);
-    }, 1000);
-  }, []);
+    let cancelled = false;
+    const fetchInitial = async () => {
+      try {
+        if (!isAuthenticated) {
+          setActivities([]);
+          setLoading(false);
+          return;
+        }
+        const res = await axiosInstance.get('/notifications/me');
+        const items = (res?.data?.data?.notifications || res?.data?.notifications || [])
+          .map(mapNotificationToActivity);
+        if (!cancelled) {
+          setActivities(items);
+        }
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error('Failed to load notifications', e);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    fetchInitial();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const socket = getSocket();
+    const handleNotification = (n) => {
+      setActivities((prev) => [mapNotificationToActivity(n), ...prev]);
+    };
+    socket.on('getNotification', handleNotification);
+    return () => {
+      socket.off('getNotification', handleNotification);
+    };
+  }, [isAuthenticated]);
 
   const getActivityIcon = (type) => {
     switch (type) {

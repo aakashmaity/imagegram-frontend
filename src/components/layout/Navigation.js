@@ -1,14 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  Home, 
-  Plus, 
-  Search, 
-  Heart, 
-  User, 
+import {
+  Home,
+  Plus,
+  Search,
+  Heart,
+  User,
   Camera,
   Menu,
   X,
@@ -18,19 +18,37 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/utils';
 import { useAuth } from '../../hooks';
+import { getSocket } from '@/utils/socket';
+
 
 const Navigation = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const { isAuthenticated, user, signout } = useAuth();
 
-  const navItems = [
+  const [hasUnreadActivity, setHasUnreadActivity] = useState(false);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const socket = getSocket();
+
+    const handleNotification = () => {
+      setHasUnreadActivity(true);
+    };
+
+    socket.on('getNotification', handleNotification);
+    return () => {
+      socket.off('getNotification', handleNotification);
+    };
+  }, [isAuthenticated]);
+
+  const navItems = useMemo(() => ([
     { href: '/', icon: Home, label: 'Home' },
     { href: '/upload', icon: Plus, label: 'Upload' },
     { href: '/search', icon: Search, label: 'Search' },
     { href: '/activity', icon: Heart, label: 'Activity' },
     { href: user?._id ? `/users/${user._id}` : '/profile', icon: User, label: 'Profile' },
-  ];
+  ]), [user?._id]);
 
   const onSignout = () => {
     signout();
@@ -56,19 +74,28 @@ const Navigation = () => {
                 {navItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = pathname === item.href;
-                  
+                  const showDot = item.href === '/activity' && hasUnreadActivity;
+
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
                       className={cn(
                         "flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors",
-                        isActive 
-                          ? "bg-accent text-accent-foreground" 
+                        isActive
+                          ? "bg-accent text-accent-foreground"
                           : "text-muted-foreground hover:text-foreground hover:bg-accent"
                       )}
+                      onClick={() => {
+                        if (item.href === '/activity') setHasUnreadActivity(false);
+                      }}
                     >
-                      <Icon className="w-5 h-5" />
+                      <div className="relative">
+                        <Icon className="w-5 h-5" />
+                        {showDot && (
+                          <span className="absolute -top-1 -right-1 block h-2 w-2 rounded-full bg-green-500" />
+                        )}
+                      </div>
                       <span className="text-sm font-medium">{item.label}</span>
                     </Link>
                   );
@@ -127,20 +154,29 @@ const Navigation = () => {
                   {navItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = pathname === item.href;
-                    
+                    const showDot = item.href === '/activity' && hasUnreadActivity;
+
                     return (
                       <Link
                         key={item.href}
                         href={item.href}
                         className={cn(
                           "flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors",
-                          isActive 
-                            ? "bg-accent text-accent-foreground" 
+                          isActive
+                            ? "bg-accent text-accent-foreground"
                             : "text-muted-foreground hover:text-foreground hover:bg-accent"
                         )}
-                        onClick={() => setIsMobileMenuOpen(false)}
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          if (item.href === '/activity') setHasUnreadActivity(false);
+                        }}
                       >
-                        <Icon className="w-5 h-5" />
+                        <div className="relative">
+                          <Icon className="w-5 h-5" />
+                          {showDot && (
+                            <span className="absolute -top-1 -right-1 block h-2 w-2 rounded-full bg-green-500" />
+                          )}
+                        </div>
                         <span className="text-sm font-medium">{item.label}</span>
                       </Link>
                     );
